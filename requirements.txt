@@ -1,0 +1,4 @@
+sigma-cli>=0.3.0
+pyyaml>=6.0
+yara-python>=4.3.0
+jupyterlab>=4.0.0

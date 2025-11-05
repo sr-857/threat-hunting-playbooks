@@ -1,0 +1,27 @@
+title: <Descriptive detection name>
+id: <UUID>
+status: experimental
+description: |
+  Outline the suspicious behavior this detection targets.
+references:
+  - https://attack.mitre.org/techniques/<TechniqueID>
+tags:
+  - attack.tactic:<tactic-name>
+  - attack.technique:<technique-id>
+logsource:
+  category: <e.g., process_creation>
+  product: <e.g., windows>
+detection:
+  selection:
+    <field>: <value>
+  condition: selection
+falsepositives:
+  - <List expected false positive scenarios>
+level: medium
+fields:
+  - <field>
+  - <field>
+# Usage Guidance:
+# - Replace placeholders with concrete values.
+# - Use additional selections or filters as necessary.
+# - For multiple conditions, expand the detection section accordingly.

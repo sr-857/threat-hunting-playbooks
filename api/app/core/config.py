@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     rules_root: Path = Field(default=Path("/rules"), validation_alias=AliasChoices("RULES_ROOT", "PLAYBOOK_RULES_ROOT"))
     artifacts_root: Path = Field(default=Path("/logs"), validation_alias=AliasChoices("ARTIFACTS_ROOT", "PLAYBOOK_ARTIFACT_ROOT"))
     log_level: str = "INFO"
+    json_logs: bool = Field(default=False, validation_alias=AliasChoices("JSON_LOGS"))
+    enable_metrics: bool = Field(default=True, validation_alias=AliasChoices("ENABLE_METRICS"))
+    metrics_endpoint: str = Field(default="/metrics", validation_alias=AliasChoices("METRICS_ENDPOINT"))
+    metrics_namespace: str = Field(default="threat_playbooks", validation_alias=AliasChoices("METRICS_NAMESPACE"))
+    worker_metrics_port: int = Field(default=9002, validation_alias=AliasChoices("WORKER_METRICS_PORT"))
+    alert_confidence_threshold: float = Field(default=0.7, validation_alias=AliasChoices("ALERT_CONFIDENCE_THRESHOLD"))
+    alert_webhook_url: str | None = Field(default=None, validation_alias=AliasChoices("ALERT_WEBHOOK_URL"))
     redis_url: str = Field(default="redis://redis:6379/0", validation_alias=AliasChoices("REDIS_URL", "CELERY_BROKER_URL"))
     celery_result_backend: str | None = Field(default=None, validation_alias=AliasChoices("CELERY_RESULT_BACKEND"))
     splunk_base_url: str | None = Field(default=None, validation_alias=AliasChoices("SPLUNK_BASE_URL"))

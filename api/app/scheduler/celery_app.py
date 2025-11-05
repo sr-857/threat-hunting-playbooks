@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from celery import Celery
+from prometheus_client import start_http_server
 
 from app.core.config import get_settings
 
@@ -24,3 +25,6 @@ celery_app.conf.update(
 )
 
 celery_app.autodiscover_tasks(["app.scheduler"], force=True)
+
+if settings.enable_metrics:
+    start_http_server(settings.worker_metrics_port)

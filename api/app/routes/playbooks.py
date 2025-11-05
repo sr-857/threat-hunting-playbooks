@@ -15,6 +15,7 @@ from app.services.playbook_store import (
     get_playbook,
     list_playbooks,
 )
+from app.services.telemetry import record_hunt_execution
 
 router = APIRouter(prefix="/playbooks", tags=["playbooks"])
 
@@ -48,4 +49,10 @@ async def run_playbook_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
     result = execute_playbook_local(playbook)
-    return PlaybookRunResponse(playbook=playbook, result=result)
+    telemetry_event = record_hunt_execution(
+        playbook=playbook,
+        result=result,
+        trigger="manual",
+        metadata={"source": "api"},
+    )
+    return PlaybookRunResponse(playbook=playbook, result=result, telemetry=telemetry_event)

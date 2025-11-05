@@ -70,6 +70,29 @@ export interface UpdateScheduleInput {
   enabled?: boolean;
 }
 
+export interface TelemetryEvent {
+  type: string;
+  timestamp: string;
+  playbook_id: string;
+  trigger?: string;
+  schedule_id?: string | null;
+  matched_count?: number;
+  total_records?: number;
+  confidence?: number;
+  notes?: string | null;
+  error?: string;
+}
+
+export interface TelemetryAlert {
+  type: string;
+  timestamp: string;
+  playbook_id: string;
+  trigger?: string;
+  schedule_id?: string | null;
+  confidence: number;
+  threshold: number;
+}
+
 export async function fetchPlaybooks(): Promise<Playbook[]> {
   const response = await fetch(`${API_BASE_URL}/api/playbooks/`, {
     cache: 'no-store',
@@ -142,4 +165,18 @@ export async function runSchedule(scheduleId: string): Promise<{ status: string 
     method: 'POST',
   });
   return handleResponse<{ status: string }>(response);
+}
+
+export async function fetchTelemetryEvents(limit = 50): Promise<TelemetryEvent[]> {
+  const response = await fetch(`${API_BASE_URL}/api/telemetry/events?limit=${limit}`, {
+    cache: 'no-store',
+  });
+  return handleResponse<TelemetryEvent[]>(response);
+}
+
+export async function fetchTelemetryAlerts(limit = 50): Promise<TelemetryAlert[]> {
+  const response = await fetch(`${API_BASE_URL}/api/telemetry/alerts?limit=${limit}`, {
+    cache: 'no-store',
+  });
+  return handleResponse<TelemetryAlert[]>(response);
 }

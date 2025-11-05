@@ -39,8 +39,12 @@ class PlaybookRunResult(BaseModel):
     total_records: int
     matched_count: int
     execution_notes: str | None = None
+    summary: str | None = None
+    confidence: float | None = None
+    artifact_paths: dict[str, str] = {}
 
 
 class PlaybookRunResponse(BaseModel):
     playbook: PlaybookRead
     result: PlaybookRunResult
+    telemetry: dict[str, Any] | None = None

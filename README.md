@@ -7,7 +7,8 @@ Threat Hunting Playbooks is an end-to-end hunting platform that operationalises 
 - **Detection catalog** – Manage Sigma and YARA rules with validation tooling and reusable templates.
 - **Run orchestration** – Execute hunts on demand or on a schedule through the REST API, Celery worker, and CLI.
 - **Connector ecosystem** – Translate Sigma logic for Splunk, Elastic, and Sentinel targets with pluggable enrichment primitives.
-- **Operational UI** – Monitor playbooks, configure schedules, and review outcomes through the React/Next.js dashboard.
+- **Operational UI** – Monitor playbooks, configure schedules, review outcomes, and inspect telemetry through the React/Next.js dashboard.
+- **Observability & alerting** – Stream hunt telemetry to Prometheus/Grafana, capture metrics/alerts, and integrate with downstream notification channels.
 - **Artifact governance** – Store results, logs, and supporting assets in PostgreSQL, MinIO, and shared volumes for downstream analysis.
 
 ## Architecture
@@ -18,7 +19,8 @@ Frontend (Next.js)  ←→  FastAPI service  ←→  PostgreSQL
          │                ├─ Celery worker (scheduled hunts)
          │                ├─ Splunk / Elastic / Sentinel connectors
          │                ├─ Redis (broker + cache)
-         │                └─ MinIO (artifact storage)
+         │                ├─ MinIO (artifact storage)
+         │                └─ Prometheus + Grafana (metrics & dashboards)
 CLI client ──────────────┘
 ```
 
@@ -75,6 +77,8 @@ Services exposed by default:
 | PostgreSQL | `postgresql://threat_user:threat_pass@localhost:5432/threat_playbooks` | Persistent metadata |
 | Redis | `redis://localhost:6379/0` | Celery broker and cache |
 | MinIO console | `http://localhost:9001` (minioadmin/minioadmin) | Artifact/object storage |
+| Prometheus | `http://localhost:9090` | Metrics scraping / alert rules |
+| Grafana | `http://localhost:3001` (admin/admin) | Dashboards visualising hunt telemetry |
 
 Stop the environment with `docker compose down`. Use `docker compose down -v` to remove persistent volumes if you want a clean slate.
 
@@ -137,6 +141,13 @@ Environment variables are managed in `docker-compose.yml`. Notable settings incl
 | `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | Object storage configuration | `http://minio:9000`, `minioadmin`, `minioadmin` |
 | `REDIS_URL`, `CELERY_BROKER_URL` | Celery broker and cache | `redis://redis:6379/0` |
 | `NEXT_PUBLIC_API_URL` | Frontend → API base URL | `http://api:8000` |
+| `JSON_LOGS` | Output structured JSON logs instead of console format | `false` |
+| `ENABLE_METRICS` | Toggle Prometheus metrics exposure | `true` |
+| `METRICS_ENDPOINT` | FastAPI metrics endpoint path | `/metrics` |
+| `METRICS_NAMESPACE` | Prometheus metric prefix | `threat_playbooks` |
+| `WORKER_METRICS_PORT` | Celery worker Prometheus port | `9002` |
+| `ALERT_CONFIDENCE_THRESHOLD` | Confidence ratio that raises an alert | `0.7` |
+| `ALERT_WEBHOOK_URL` | Optional webhook for high-confidence alerts | `null` |
 
 Adjust these values (for example via `.env` files) before deploying to shared environments. Harden credentials, enable TLS termination, and integrate external observability as needed.
 
@@ -144,8 +155,15 @@ Adjust these values (for example via `.env` files) before deploying to shared en
 
 - **Production readiness** – Add HTTPS, secrets management, and central logging. Provision managed PostgreSQL/Redis/MinIO services or equivalent cloud offerings.
 - **Scaling** – Run multiple Celery workers to process concurrent schedules. Front the API and UI with a reverse proxy or load balancer.
-- **Monitoring** – Export Celery and FastAPI metrics, capture schedule execution history, and integrate with SIEM/alerting pipelines.
+- **Monitoring** – Scrape `/metrics` with Prometheus, visualise dashboards in Grafana, consume `/api/telemetry/{events,alerts}`, and integrate alert webhooks.
 - **Backups** – Enable regular backups for PostgreSQL and MinIO buckets storing hunt artifacts.
+
+## Observability & Alerting
+
+- **Telemetry endpoints** – Access recent executions and priority alerts via `/api/telemetry/events` and `/api/telemetry/alerts`.
+- **Prometheus metrics** – Hunt counters/gauges (`hunt_runs_total`, `hunt_alerts_total`, etc.) are exposed for dashboards and alerting rules.
+- **Grafana dashboards** – The UI surfaces a built-in Observability view, while Grafana (port `3001`) can consume Prometheus (`http://prometheus:9090`) for richer analytics.
+- **Alert thresholds** – Configure `ALERT_CONFIDENCE_THRESHOLD` (and optional `ALERT_WEBHOOK_URL`) to drive automated notifications.
 
 ## Contributing
 

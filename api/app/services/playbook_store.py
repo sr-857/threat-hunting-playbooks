@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID
@@ -67,10 +69,34 @@ def execute_playbook_local(playbook: PlaybookRead) -> PlaybookRunResult:
         )
 
     matched_count = sum(1 for result in matches if result.matched)
+    total_records = len(records)
+    confidence = matched_count / total_records if total_records else 0.0
+    summary = f"{matched_count}/{total_records} records matched" if total_records else "No records processed"
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    output_dir = settings.artifacts_root.joinpath("output", str(playbook.id))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    artifact_file = output_dir.joinpath(f"result_{timestamp}.json")
+
+    artifact_payload = {
+        "playbook_id": str(playbook.id),
+        "generated_at": timestamp,
+        "summary": summary,
+        "confidence": confidence,
+        "matched_count": matched_count,
+        "total_records": total_records,
+        "notes": "Local execution against JSONL sample data",
+        "matches": [match.model_dump() for match in matches],
+    }
+    artifact_file.write_text(json.dumps(artifact_payload, default=str), encoding="utf-8")
+
     return PlaybookRunResult(
         playbook_id=playbook.id,
         matches=matches,
-        total_records=len(records),
+        total_records=total_records,
         matched_count=matched_count,
         execution_notes="Local execution against JSONL sample data",
+        summary=summary,
+        confidence=confidence,
+        artifact_paths={"result": str(artifact_file)},
     )

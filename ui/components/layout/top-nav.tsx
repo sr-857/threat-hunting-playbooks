@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Playbooks' },
   { href: '/guides', label: 'Guided Workflow' },
   { href: '/advanced', label: 'Advanced Mode' },
+  { href: '/observability', label: 'Observability' },
 ];
 
 export function TopNav() {

@@ -26,6 +26,63 @@ class Settings(BaseSettings):
     alert_webhook_url: str | None = Field(default=None, validation_alias=AliasChoices("ALERT_WEBHOOK_URL"))
     redis_url: str = Field(default="redis://redis:6379/0", validation_alias=AliasChoices("REDIS_URL", "CELERY_BROKER_URL"))
     celery_result_backend: str | None = Field(default=None, validation_alias=AliasChoices("CELERY_RESULT_BACKEND"))
+    secret_key: str = Field(default="change-me", validation_alias=AliasChoices("SECRET_KEY", "JWT_SECRET_KEY"))
+    access_token_expire_minutes: int = Field(
+        default=60,
+        validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "JWT_EXPIRE_MINUTES"),
+    )
+    initial_admin_email: str = Field(
+        default="admin@example.com",
+        validation_alias=AliasChoices("INITIAL_ADMIN_EMAIL", "ADMIN_EMAIL"),
+    )
+    initial_admin_password: str = Field(
+        default="ChangeMe123!",
+        validation_alias=AliasChoices("INITIAL_ADMIN_PASSWORD", "ADMIN_PASSWORD"),
+    )
+    alert_slack_webhook_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_SLACK_WEBHOOK_URL"),
+    )
+    alert_teams_webhook_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_TEAMS_WEBHOOK_URL"),
+    )
+    alert_pagerduty_routing_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_PAGERDUTY_ROUTING_KEY"),
+    )
+    alert_pagerduty_api_url: str = Field(
+        default="https://events.pagerduty.com/v2/enqueue",
+        validation_alias=AliasChoices("ALERT_PAGERDUTY_API_URL"),
+    )
+    alert_email_host: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_EMAIL_HOST"),
+    )
+    alert_email_port: int = Field(
+        default=587,
+        validation_alias=AliasChoices("ALERT_EMAIL_PORT"),
+    )
+    alert_email_username: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_EMAIL_USERNAME"),
+    )
+    alert_email_password: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_EMAIL_PASSWORD"),
+    )
+    alert_email_from: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_EMAIL_FROM"),
+    )
+    alert_email_to: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ALERT_EMAIL_TO"),
+    )
+    alert_email_use_tls: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("ALERT_EMAIL_USE_TLS"),
+    )
     splunk_base_url: str | None = Field(default=None, validation_alias=AliasChoices("SPLUNK_BASE_URL"))
     splunk_token: str | None = Field(default=None, validation_alias=AliasChoices("SPLUNK_TOKEN"))
     splunk_username: str | None = Field(default=None, validation_alias=AliasChoices("SPLUNK_USERNAME"))

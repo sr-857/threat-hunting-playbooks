@@ -24,8 +24,14 @@ def calculate_next_run(cron_expression: str, base_time: datetime | None = None) 
     return iterator.get_next(datetime)
 
 
-async def list_schedules(session: AsyncSession) -> list[HuntScheduleRead]:
-    result = await session.execute(select(HuntSchedule))
+async def list_schedules(
+    session: AsyncSession,
+    *,
+    offset: int = 0,
+    limit: int = 100,
+) -> list[HuntScheduleRead]:
+    query = select(HuntSchedule).offset(max(offset, 0)).limit(max(limit, 1))
+    result = await session.execute(query)
     schedules = result.scalars().all()
     return [HuntScheduleRead.model_validate(item) for item in schedules]
 

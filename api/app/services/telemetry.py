@@ -7,12 +7,20 @@ from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from time import monotonic
 
 import structlog
 from prometheus_client import Counter, Gauge
 
 from app.core.config import get_settings
 from app.schemas.playbook import PlaybookRead, PlaybookRunResult
+from app.services.notifiers import notify_email, notify_pagerduty, notify_slack, notify_teams
+
+_CACHE_TTL_SECONDS = 10.0
+_cache: dict[str, dict[str, Any]] = {
+    "events": {"timestamp": 0.0, "data": []},
+    "alerts": {"timestamp": 0.0, "data": []},
+}
 
 settings = get_settings()
 logger = structlog.get_logger(__name__)
@@ -73,16 +81,47 @@ def _read_jsonl(path: Path, limit: int) -> list[dict[str, Any]]:
     return events
 
 
+def _get_cached(name: str, limit: int) -> list[dict[str, Any]] | None:
+    cache_entry = _cache.get(name)
+    if not cache_entry:
+        return None
+    if monotonic() - float(cache_entry["timestamp"]) > _CACHE_TTL_SECONDS:
+        return None
+    data = cache_entry.get("data") or []
+    if len(data) >= limit:
+        return data[:limit]
+    return None
+
+
+def _store_cache(name: str, data: list[dict[str, Any]]) -> None:
+    _cache[name] = {
+        "timestamp": monotonic(),
+        "data": data,
+    }
+
+
 def list_hunt_events(limit: int = 100) -> list[dict[str, Any]]:
     """Return the most recent hunt execution/failure events."""
 
-    return _read_jsonl(_telemetry_directory().joinpath("hunt_events.jsonl"), limit)
+    cached = _get_cached("events", limit)
+    if cached is not None:
+        return cached
+
+    events = _read_jsonl(_telemetry_directory().joinpath("hunt_events.jsonl"), limit)
+    _store_cache("events", events)
+    return events
 
 
 def list_hunt_alerts(limit: int = 100) -> list[dict[str, Any]]:
     """Return the most recent hunt alerts."""
 
-    return _read_jsonl(_telemetry_directory().joinpath("hunt_alerts.jsonl"), limit)
+    cached = _get_cached("alerts", limit)
+    if cached is not None:
+        return cached
+
+    alerts = _read_jsonl(_telemetry_directory().joinpath("hunt_alerts.jsonl"), limit)
+    _store_cache("alerts", alerts)
+    return alerts
 
 
 def record_hunt_execution(
@@ -113,6 +152,7 @@ def record_hunt_execution(
 
     logger.info("hunt.execution", **event)
     _append_event("hunt_events.jsonl", event)
+    _cache["events"]["timestamp"] = 0.0
 
     if settings.enable_metrics:
         HUNT_RUNS.labels(str(playbook.id), trigger, "success").inc()
@@ -142,6 +182,7 @@ def record_hunt_failure(
     }
     logger.error("hunt.failure", **event)
     _append_event("hunt_events.jsonl", event)
+    _cache["events"]["timestamp"] = 0.0
 
     if settings.enable_metrics:
         HUNT_FAILURES.labels(playbook_id, trigger).inc()
@@ -167,6 +208,24 @@ def record_hunt_alert(
 
     logger.warning("hunt.alert", **event)
     _append_event("hunt_alerts.jsonl", event)
+    _cache["alerts"]["timestamp"] = 0.0
 
     if settings.enable_metrics:
         HUNT_ALERTS.labels(str(playbook.id), "high").inc()
+
+    summary = (
+        f"Hunt {playbook.name} ({playbook.id}) exceeded the confidence threshold "
+        f"({confidence:.2%} ≥ {settings.alert_confidence_threshold:.2%})."
+    )
+    details = [
+        summary,
+        f"Trigger: {trigger}",
+        f"Schedule ID: {schedule_id or '—'}",
+        f"Tags: {', '.join(playbook.tags) if playbook.tags else 'none'}",
+    ]
+    body = "\n".join(details)
+
+    notify_slack({"text": body})
+    notify_teams({"text": body})
+    notify_pagerduty(summary=summary, severity="critical", source=str(playbook.id))
+    notify_email(subject=f"Hunt alert: {playbook.name}", body=body)

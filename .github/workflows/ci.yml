@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_USER: threat_user
+          POSTGRES_PASSWORD: threat_pass
+          POSTGRES_DB: threat_playbooks
+        options: >-
+          --health-cmd "pg_isready -U threat_user -d threat_playbooks"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://threat_user:threat_pass@localhost:5432/threat_playbooks
+      INITIAL_ADMIN_EMAIL: ci-admin@example.com
+      INITIAL_ADMIN_PASSWORD: ChangeMeForCI!
+      ENABLE_METRICS: "false"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: api
+        run: |
+          pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Run API test suite
+        working-directory: api
+        run: pytest
+
+  ui-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        working-directory: ui
+        run: npm install
+
+      - name: Run lint
+        working-directory: ui
+        run: npm run lint

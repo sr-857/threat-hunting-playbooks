@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from time import monotonic
 from pathlib import Path
 from typing import Iterable
 from uuid import UUID
@@ -16,6 +17,9 @@ from app.models.playbook import Playbook
 from app.schemas.playbook import PlaybookRead, PlaybookRunMatch, PlaybookRunResult
 from app.utils.sigma import iter_jsonl_records, load_sigma_rules, record_matches_selection
 
+_CACHE_TTL_SECONDS = 30.0
+_playbook_cache: dict[str, object] = {"timestamp": 0.0, "data": None}
+
 settings = get_settings()
 
 
@@ -23,10 +27,35 @@ class PlaybookNotFoundError(Exception):
     """Raised when a playbook is not found."""
 
 
-async def list_playbooks(session: AsyncSession) -> list[PlaybookRead]:
-    result = await session.execute(select(Playbook))
+async def list_playbooks(
+    session: AsyncSession,
+    *,
+    offset: int = 0,
+    limit: int = 100,
+) -> list[PlaybookRead]:
+    offset = max(offset, 0)
+    limit = max(limit, 1)
+
+    now = monotonic()
+    cached_data = _playbook_cache["data"]
+    if (
+        cached_data is not None
+        and isinstance(cached_data, list)
+        and now - float(_playbook_cache["timestamp"]) < _CACHE_TTL_SECONDS
+    ):
+        return cached_data[offset : offset + limit]
+
+    query = select(Playbook).offset(offset).limit(limit)
+    result = await session.execute(query)
     playbooks = result.scalars().all()
-    return [PlaybookRead.model_validate(pb) for pb in playbooks]
+    records = [PlaybookRead.model_validate(pb) for pb in playbooks]
+
+    # Refresh cache when fetching from the beginning to avoid partial caches.
+    if offset == 0:
+        _playbook_cache["timestamp"] = now
+        _playbook_cache["data"] = records
+
+    return records
 
 
 async def get_playbook(session: AsyncSession, playbook_id: UUID) -> PlaybookRead:

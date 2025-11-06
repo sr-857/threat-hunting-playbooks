@@ -1,0 +1,30 @@
+title: Suspicious Remote WMI Execution
+id: 6d6b6d08-1d78-4fd3-9fcb-7b7b0fa8cdab
+status: production
+description: Detects remote WMI execution via process creation events associated with wmic.exe or powershell remoting.
+author: Threat Hunting Playbooks
+references:
+  - https://attack.mitre.org/techniques/T1047/
+logsource:
+  product: windows
+  service: security
+  definition: Event ID 4688 process creation with command lines invoking remote WMI
+level: high
+falsepositives:
+  - Legitimate remote administration utilities
+  - SCCM or enterprise software deployment tools
+fields:
+  - SubjectUserName
+  - NewProcessName
+  - CommandLine
+  - ParentProcessName
+detection:
+  selection_processes:
+    NewProcessName|endswith:
+      - '\\wmic.exe'
+      - '\\powershell.exe'
+  selection_remote:
+    CommandLine|contains:
+      - '/node:'
+      - '-ComputerName'
+  condition: selection_processes and selection_remote

@@ -1,0 +1,67 @@
+id: win_lateral_movement_wmi
+name: Windows Lateral Movement via WMI
+summary: Detects remote WMI execution used for lateral movement on Windows hosts.
+entity: host
+owner: secops-hunt-team
+confidence: medium
+severity: high
+status: production
+version: 1.0.0
+updated_at: 2025-11-06
+log_sources:
+  - product: windows
+    service: security
+    requirement: Event IDs 4688, 4689, 4672 collected from endpoints
+  - product: windows
+    service: sysmon
+    requirement: Sysmon operational logs with Event ID 1
+linked_rules:
+  sigma:
+    - path: rules/sigma/windows/lateral_movement_wmi.yml
+      use_case: detect remote WMI and WINRM execution
+  yara: []
+enrichment:
+  notebook: notebooks/enrichment/windows_remote_execution.ipynb
+  parameters:
+    HUNT_ENTITY: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/threat_intel.py
+    - scripts/lib/context/windows_accounts.py
+assumptions:
+  - EDR agent provides detailed process command-line telemetry
+  - Admin shares are monitored for remote service creation
+  - Hunt should run against host entity IDs (hostname or FQDN)
+data_requirements:
+  - Windows Security Events 4688/4689/4672 from targets and suspected source machines
+  - Sysmon Event ID 1 with full process command-line capture
+  - Active Directory user-to-host mapping for contextual enrichment
+defaults:
+  time_range: 24h
+  schedule: "0 * * * *"
+  sla_minutes: 30
+  owner_channel: "#soc-hunts"
+attack_mapping:
+  tactics:
+    - TA0008: Lateral Movement
+    - TA0002: Execution
+  techniques:
+    - T1047: Windows Management Instrumentation
+    - T1021.006: Remote Services (WMI)
+tuning_notes:
+  - False positives may occur for legitimate remote administration tools (SCCM, PDQ Deploy). Baseline known management hosts.
+  - Add local allow-lists for IT automation service accounts.
+variants:
+  - name: WMI with Encoded Commands
+    description: Detects powershell.exe invoking WMI with encoded payloads.
+    detection: Adjust Sigma selection to focus on powershell.exe /encodedcommand combined with wmic.exe process tree.
+review_checklist:
+  - Confirm remote process creator host is unfamiliar for target system.
+  - Pivot into enrichment notebook outputs for logged-on users and network paths.
+  - Validate with endpoint telemetry (EDR) before escalating.
+notes:
+  implementation: |
+    Local execution uses Sigma translation to evaluate JSONL process events. For production, connect to Splunk or Elastic connectors.
+  references:
+    - https://attack.mitre.org/techniques/T1047/
+    - https://learn.microsoft.com/windows/win32/wmisdk/wmi-start-page

@@ -9,6 +9,7 @@ Threat Hunting Playbooks is an end-to-end hunting platform that operationalises 
 - **Connector ecosystem** – Translate Sigma logic for Splunk, Elastic, and Sentinel targets with pluggable enrichment primitives.
 - **Operational UI** – Monitor playbooks, configure schedules, review outcomes, and inspect telemetry through the React/Next.js dashboard.
 - **Observability & alerting** – Stream hunt telemetry to Prometheus/Grafana, capture metrics/alerts, and integrate with downstream notification channels.
+- **Authentication & RBAC** – Issue JWTs for users, enforce least-privilege access across the API, CLI, and UI.
 - **Artifact governance** – Store results, logs, and supporting assets in PostgreSQL, MinIO, and shared volumes for downstream analysis.
 
 ## Architecture
@@ -163,7 +164,8 @@ Adjust these values (for example via `.env` files) before deploying to shared en
 - **Telemetry endpoints** – Access recent executions and priority alerts via `/api/telemetry/events` and `/api/telemetry/alerts`.
 - **Prometheus metrics** – Hunt counters/gauges (`hunt_runs_total`, `hunt_alerts_total`, etc.) are exposed for dashboards and alerting rules.
 - **Grafana dashboards** – The UI surfaces a built-in Observability view, while Grafana (port `3001`) can consume Prometheus (`http://prometheus:9090`) for richer analytics.
-- **Alert thresholds** – Configure `ALERT_CONFIDENCE_THRESHOLD` (and optional `ALERT_WEBHOOK_URL`) to drive automated notifications.
+- **Alert thresholds** – Configure `ALERT_CONFIDENCE_THRESHOLD` to drive automated notifications.
+- **Webhook integrations** – Supply `ALERT_SLACK_WEBHOOK_URL`, `ALERT_TEAMS_WEBHOOK_URL`, `ALERT_PAGERDUTY_ROUTING_KEY`, or SMTP variables (`ALERT_EMAIL_*`) for downstream alert delivery.
 
 ## Contributing
 
@@ -174,4 +176,4 @@ Adjust these values (for example via `.env` files) before deploying to shared en
 
 ## License
 
-License details will be published in `LICENSE`. Until then, contributions are accepted under the terms communicated by the project maintainers.
+This project is released under the [MIT License](LICENSE).

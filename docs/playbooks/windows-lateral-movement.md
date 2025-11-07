@@ -1,5 +1,7 @@
 # Windows Lateral Movement via WMI
 
+> See also: [Linux Cron Persistence](./linux-persistence.md) · [Cloud IAM Impossible Travel](./cloud-iam-anomalies.md)
+
 This walkthrough explains the intent, data requirements, execution flow, and analyst review steps for the `win_lateral_movement_wmi` hunt.
 
 ## Objective

@@ -10,13 +10,15 @@ import sys
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 TEST_DB_PATH = Path(__file__).with_name("test.db")
 if TEST_DB_PATH.exists():
     TEST_DB_PATH.unlink()
 
 PREVIOUS_DATABASE_URL = os.environ.get("DATABASE_URL")
-os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ.setdefault("INITIAL_ADMIN_EMAIL", "admin@example.com")
 os.environ.setdefault("INITIAL_ADMIN_PASSWORD", "ChangeMe123!")
 os.environ.setdefault("ENABLE_METRICS", "false")
@@ -49,6 +51,30 @@ os.environ.setdefault("ARTIFACTS_ROOT", str(ARTIFACTS_ROOT))
 BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
+
+from app.db import session as db_session  # noqa: E402
+
+sqlite_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
+try:
+    db_session.engine.sync_engine.dispose()
+except AttributeError:
+    pass
+db_session.engine = sqlite_engine
+db_session.AsyncSessionLocal = async_sessionmaker(sqlite_engine, expire_on_commit=False, class_=AsyncSession)
+
+from app.services import bootstrap as bootstrap_services  # noqa: E402
+from app.api import deps as api_deps  # noqa: E402
+
+try:
+    from app.scheduler import tasks as scheduler_tasks  # noqa: E402
+except Exception:  # pragma: no cover - scheduler optional in tests
+    scheduler_tasks = None
+
+bootstrap_services.engine = db_session.engine
+bootstrap_services.AsyncSessionLocal = db_session.AsyncSessionLocal
+api_deps.AsyncSessionLocal = db_session.AsyncSessionLocal
+if scheduler_tasks is not None:
+    scheduler_tasks.AsyncSessionLocal = db_session.AsyncSessionLocal
 
 from app.main import app  # noqa: E402  (import after environment configuration)
 

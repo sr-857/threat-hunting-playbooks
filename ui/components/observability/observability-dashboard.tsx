@@ -29,7 +29,7 @@ function useTelemetry(limit: number) {
 function formatTimestamp(value: string) {
   try {
     return new Date(value).toLocaleString();
-  } catch (error) {
+  } catch {
     return value;
   }
 }
@@ -41,11 +41,12 @@ export function ObservabilityDashboard({ defaultLimit = 50 }: { defaultLimit?: n
   const events = eventsQuery.data ?? [];
 
   const aggregateStats = useMemo(() => {
-    if (!events.length) {
+    const sourceEvents = eventsQuery.data ?? [];
+    if (!sourceEvents.length) {
       return null;
     }
     const huntsByPlaybook = new Map<string, { total: number; matched: number }>();
-    events.forEach((event) => {
+    sourceEvents.forEach((event) => {
       if (!event.playbook_id) {
         return;
       }
@@ -60,7 +61,7 @@ export function ObservabilityDashboard({ defaultLimit = 50 }: { defaultLimit?: n
       playbookId,
       ...stats,
     }));
-  }, [events]);
+  }, [eventsQuery.data]);
 
   return (
     <div className="space-y-10">

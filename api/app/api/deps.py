@@ -19,8 +19,12 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-def get_session_dependency() -> Depends:
-    return Depends(get_db_session)
+def get_session_dependency() -> Callable[[], AsyncGenerator[AsyncSession, None]]:
+    async def dependency() -> AsyncGenerator[AsyncSession, None]:
+        async with AsyncSessionLocal() as session:
+            yield session
+
+    return dependency
 
 
 async def get_current_user(

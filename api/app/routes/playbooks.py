@@ -7,8 +7,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_session_dependency
+from app.api.deps import get_current_active_user, get_session_dependency
 from app.schemas.playbook import PlaybookRead, PlaybookRunResponse
+from app.schemas.user import UserRead
 from app.services.playbook_store import (
     PlaybookNotFoundError,
     execute_playbook_local,
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/playbooks", tags=["playbooks"])
 @router.get("/", response_model=list[PlaybookRead])
 async def list_playbook_endpoint(
     session: AsyncSession = Depends(get_session_dependency()),
+    _: UserRead = Depends(get_current_active_user),
 ) -> list[PlaybookRead]:
     return await list_playbooks(session)
 
@@ -31,6 +33,7 @@ async def list_playbook_endpoint(
 async def get_playbook_endpoint(
     playbook_id: UUID,
     session: AsyncSession = Depends(get_session_dependency()),
+    _: UserRead = Depends(get_current_active_user),
 ) -> PlaybookRead:
     try:
         return await get_playbook(session, playbook_id)
@@ -42,6 +45,7 @@ async def get_playbook_endpoint(
 async def run_playbook_endpoint(
     playbook_id: UUID,
     session: AsyncSession = Depends(get_session_dependency()),
+    _: UserRead = Depends(get_current_active_user),
 ) -> PlaybookRunResponse:
     try:
         playbook = await get_playbook(session, playbook_id)

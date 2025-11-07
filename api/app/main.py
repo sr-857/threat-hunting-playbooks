@@ -5,6 +5,7 @@ import structlog
 from fastapi import FastAPI, Request
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from app.api.routers.auth import router as auth_router
 from app.api.routers.schedules import router as schedules_router
 from app.api.routers.telemetry import router as telemetry_router
 from app.core.config import get_settings
@@ -24,6 +25,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(playbooks_router, prefix=settings.api_prefix)
 app.include_router(schedules_router, prefix=settings.api_prefix)
 app.include_router(telemetry_router, prefix=settings.api_prefix)

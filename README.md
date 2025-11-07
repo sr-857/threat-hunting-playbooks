@@ -6,6 +6,15 @@
 
 Threat Hunting Playbooks is an end-to-end hunting platform that operationalises Sigma and YARA detections, orchestrates scheduled investigations, and guides analysts through enrichment workflows. The stack combines a FastAPI backend, Celery worker, Next.js frontend, and CLI utilities to execute hunts across Splunk, Elastic, and Microsoft Sentinel data sources.
 
+## About
+
+Threat Hunting Playbooks helps security operations teams operationalise detections and response workflows by providing:
+
+- **Unified content management** – curate Sigma/YARA rules, notebooks, and supporting artifacts in one place.
+- **Flexible execution paths** – launch hunts via API, UI, CLI, or Celery schedules against multiple telemetry sources.
+- **Built-in observability** – stream hunt telemetry to Prometheus/Grafana and trigger notifications across Slack, Teams, PagerDuty, and email.
+- **Secure-by-default access** – rely on JWT authentication, RBAC, and hardened defaults for multi-user environments.
+
 ## Key Capabilities
 
 - **Detection catalog** – Manage Sigma and YARA rules with validation tooling and reusable templates.

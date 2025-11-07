@@ -1,0 +1,30 @@
+title: Linux Privilege Escalation via SUID Dropper
+id: 2fd9d807-71a9-4a47-8d92-6aa2738af1c0
+status: experimental
+description: Detects creation or execution of unexpected SUID binaries originating from non-administrative users.
+author: Threat Hunting Playbooks Team
+logsource:
+  product: linux
+  service: auditd
+  category: process_creation
+detection:
+  selection_chmod:
+    syscall: chmod
+    a0|endswith: "4755"
+  selection_exec:
+    exe|endswith:
+      - "/tmp"
+      - "/usr/local/bin"
+    euid: 0
+  timeframe: 10m
+  condition: selection_chmod | followedby selection_exec within 10m
+fields:
+  - timestamp
+  - host
+  - exe
+  - euid
+  - auid
+  - command
+falsepositives:
+  - Legitimate packaging or maintenance workflows deploying SUID helpers
+level: high

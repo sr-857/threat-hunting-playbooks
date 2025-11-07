@@ -8,7 +8,10 @@ This guide curates ready-to-run hunts that ship with the project (or can be adde
 
 1. [Suspicious PowerShell Execution (built-in)](#suspicious-powershell-execution-built-in)
 2. [RDP Brute Force Detection (sample)](#rdp-brute-force-detection-sample)
-3. [Capturing Screenshots for Documentation](#capturing-screenshots-for-documentation)
+3. [SaaS Credential Stuffing Campaign](#saas-credential-stuffing-campaign)
+4. [Linux SUID Dropper Privilege Escalation](#linux-suid-dropper-privilege-escalation)
+5. [Sentinel Connector Abuse](#sentinel-connector-abuse)
+6. [Capturing Screenshots for Documentation](#capturing-screenshots-for-documentation)
 
 ---
 
@@ -116,6 +119,75 @@ Repeat the failure record 6–8 times, then append a success entry with `EventID
 3. Capture screenshots of the configuration form and resulting telemetry entry.
 
 > 💡 Highlight how the hunt escalates an alert when the success event follows multiple failures—great for training demos.
+
+---
+
+## SaaS Credential Stuffing Campaign
+
+Demonstrate a modern identity attack where distributed login failures precede a suspicious success that bypasses MFA.
+
+| Attribute | Value |
+| --- | --- |
+| Playbook Name | `SaaS Credential Stuffing Campaign` |
+| Sample Data | `samples/logs/saas_credential_stuffing.jsonl` |
+| Hunt Definition | `hunts/saas_credential_stuffing/hunt.yml` |
+| Rule File | `rules/sigma/saas/credential_stuffing.yml` |
+
+### Steps
+1. Upload the sample JSONL file under **Playbooks → SaaS Credential Stuffing Campaign → Data Sources**.
+2. Run the hunt; note `matched_count = 1` and confidence `1.0` from the MFA bypass event.
+3. Capture the alert card showing correlated failure and success events.
+
+### Discussion Points
+- Explain how distributed IPs indicate credential stuffing versus user error.
+- Highlight enrichment from GeoIP and threat intel scripts.
+- Encourage analysts to schedule hourly execution and integrate Slack/PagerDuty notifications.
+
+---
+
+## Linux SUID Dropper Privilege Escalation
+
+Showcase Linux endpoint telemetry by correlating chmod events and privileged execution of rogue binaries.
+
+| Attribute | Value |
+| --- | --- |
+| Playbook Name | `Linux Privilege Escalation via SUID Dropper` |
+| Sample Data | `samples/logs/linux_suid_dropper.jsonl` |
+| Hunt Definition | `hunts/linux_privilege_escalation/hunt.yml` |
+| Rule Files | `rules/sigma/linux/privilege_escalation_suid_dropper.yml`, `rules/yara/linux/suid_dropper.yar` |
+
+### Steps
+1. Attach the sample audit log file and run the hunt from the UI.
+2. Confirm the telemetry output lists the `kworker` binary with effective UID 0.
+3. Demonstrate CLI replay for scripted validation.
+
+### Talking Points
+- Discuss tuning allow-lists for configuration management activities.
+- Emphasise enrichment scripts mapping binaries to originating users.
+- Suggest capturing before/after screenshots of the Observability dashboard.
+
+---
+
+## Sentinel Connector Abuse
+
+Illustrate cloud defense-evasion scenarios by catching automation rule disablement and connector tampering in Azure Sentinel.
+
+| Attribute | Value |
+| --- | --- |
+| Playbook Name | `Sentinel Connector Abuse` |
+| Sample Data | `samples/logs/azure_sentinel_connector_abuse.jsonl` |
+| Hunt Definition | `hunts/sentinel_service_abuse/hunt.yml` |
+| Rule File | `rules/sigma/cloud/azure_sentinel_connector_abuse.yml` |
+
+### Steps
+1. Upload the sample Activity log file and execute the hunt.
+2. Validate `matched_count = 3` and review affected connectors in the result payload.
+3. Capture the UI timeline illustrating automation rules toggled to disabled.
+
+### Talking Points
+- Connect detection to MITRE T1562.008 (Disable/Modify Cloud Logs).
+- Explain how the Sentinel connector leverages KQL to correlate operations.
+- Recommend follow-up checks: PAM approvals, ingestion metric recovery.
 
 ---
 

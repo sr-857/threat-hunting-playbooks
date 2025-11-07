@@ -1,0 +1,68 @@
+id: sentinel_service_abuse
+name: Azure Sentinel Data Connector Abuse
+summary: Detects mass ingestion or modification activity targeting Microsoft Sentinel data connectors and automation rules.
+entity: tenant
+owner: secops-hunt-team
+confidence: medium
+severity: high
+status: production
+version: 1.0.0
+updated_at: 2025-11-07
+log_sources:
+  - product: azure
+    service: sentinel
+    requirement: Azure Activity logs for Sentinel resource operations
+  - product: azure
+    service: monitor
+    requirement: Diagnostic logs capturing data connector configuration changes
+linked_rules:
+  sigma:
+    - path: rules/sigma/cloud/azure_sentinel_connector_abuse.yml
+      use_case: detect suspicious changes to data connectors and automation rules
+  yara: []
+enrichment:
+  notebook: notebooks/enrichment/azure_sentinel_health.ipynb
+  parameters:
+    TENANT_ID: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/context/azure_subscriptions.py
+    - scripts/lib/threat_intel.py
+assumptions:
+  - Sentinel resources emit administrative operations to the Activity log.
+  - SOC maintains baseline of connector configuration changes.
+  - Automation rule updates are rare and scoped to SOC engineering.
+data_requirements:
+  - Azure Activity log entries for `Microsoft.SecurityInsights/dataConnectors` operations
+  - Automation rule change logs with actor principal IDs
+  - Optional: Azure Resource Graph snapshots for connector inventory
+defaults:
+  time_range: 2h
+  schedule: "*/20 * * * *"
+  sla_minutes: 20
+  owner_channel: "#soc-azure"
+attack_mapping:
+  tactics:
+    - TA0005: Defense Evasion
+    - TA0006: Credential Access
+    - TA0007: Discovery
+  techniques:
+    - T1562.008: Disable or Modify Cloud Logs
+    - T1087.004: Account Discovery (Cloud Groups)
+tuning_notes:
+  - Allow meta-alerts for planned maintenance windows by tagging change tickets.
+  - Suppress alerts from SOC automation service principals after verification.
+variants:
+  - name: Sentinel Automation Rule Disablement
+    description: Focus on `PATCH` requests setting automation rules to disabled state.
+    detection: Narrow Sigma rule to detect `properties.enabled == false` transitions.
+review_checklist:
+  - Validate actor principal against privileged access management approvals.
+  - Inspect preceding authentication events for anomalous locations or devices.
+  - Ensure data connector ingestion volume returns to baseline post-change.
+notes:
+  implementation: |
+    Local execution replays Azure Activity log JSONL samples. Production mode leverages Sentinel connector to query Log Analytics workspace.
+  references:
+    - https://attack.mitre.org/techniques/T1562/008/
+    - https://learn.microsoft.com/azure/sentinel/connect-data-sources

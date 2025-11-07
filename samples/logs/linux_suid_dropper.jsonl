@@ -1,0 +1,4 @@
+{"timestamp": "2025-08-21T10:15:42Z", "host": "web-03", "process": "chmod", "path": "/tmp/.cache/.sshd_helper", "mode": "4755", "user": "www-data", "parent": "gcc", "command_line": "chmod 4755 /tmp/.cache/.sshd_helper"}
+{"timestamp": "2025-08-21T10:16:04Z", "host": "web-03", "process": "mv", "path": "/tmp/.cache/.sshd_helper", "destination": "/usr/local/bin/kworker", "user": "www-data", "command_line": "mv /tmp/.cache/.sshd_helper /usr/local/bin/kworker"}
+{"timestamp": "2025-08-21T10:16:10Z", "host": "web-03", "process": "chmod", "path": "/usr/local/bin/kworker", "mode": "4755", "user": "www-data", "command_line": "chmod 4755 /usr/local/bin/kworker"}
+{"timestamp": "2025-08-21T10:16:18Z", "host": "web-03", "process": "kworker", "effective_uid": 0, "user": "www-data", "command_line": "/usr/local/bin/kworker --check"}

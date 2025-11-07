@@ -1,0 +1,69 @@
+id: linux_privilege_escalation
+name: Linux Privilege Escalation via SUID Dropper
+summary: Detects suspicious privilege escalation leveraging newly created SUID binaries on Linux hosts.
+entity: host
+owner: secops-hunt-team
+confidence: medium
+severity: high
+status: production
+version: 1.0.0
+updated_at: 2025-11-07
+log_sources:
+  - product: linux
+    service: auditd
+    requirement: Audit logs capturing file permission changes and executions
+  - product: linux
+    service: endpoint
+    requirement: EDR telemetry for process lineage and command-line arguments
+linked_rules:
+  sigma:
+    - path: rules/sigma/linux/privilege_escalation_suid_dropper.yml
+      use_case: detect privilege escalation through custom SUID binaries
+  yara:
+    - path: rules/yara/linux/suid_dropper.yar
+      use_case: identify malicious SUID binary artifacts
+enrichment:
+  notebook: notebooks/enrichment/linux_priv_esc.ipynb
+  parameters:
+    HUNT_HOST: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/context/linux_users.py
+    - scripts/lib/threat_intel.py
+assumptions:
+  - Auditd watches `/usr/bin`, `/usr/local/bin`, and `/tmp` for permission changes.
+  - Sysadmins rarely create new SUID binaries; baseline known maintenance activity.
+  - Endpoint telemetry includes parent-child relationships for compiled binaries.
+data_requirements:
+  - Audit log events for `chmod`/`chown` with permission bits including `4000`.
+  - Process execution telemetry for binaries executed with elevated privileges.
+  - Optional: File integrity monitoring outputs for newly created binaries.
+defaults:
+  time_range: 4h
+  schedule: "*/30 * * * *"
+  sla_minutes: 45
+  owner_channel: "#soc-linux"
+attack_mapping:
+  tactics:
+    - TA0004: Privilege Escalation
+    - TA0006: Credential Access
+  techniques:
+    - T1548: Abuse Elevation Control Mechanism
+    - T1548.001: Setuid and Setgid
+tuning_notes:
+  - Suppress events tied to configuration management tools (Ansible, Chef) after verification.
+  - Track build pipelines that legitimately produce SUID binaries for packaging.
+variants:
+  - name: Linux PrivEsc via sudoers Tampering
+    description: Monitors direct edits to `/etc/sudoers` and drop-in files granting passwordless sudo.
+    detection: Extend Sigma rule to include filesystem modifications to `/etc/sudoers` paths.
+review_checklist:
+  - Validate the binary hash against known-good software inventories.
+  - Inspect compile-time metadata to determine authoring user and path.
+  - Hunt for subsequent privilege abuse (e.g., `chmod 777 /etc/passwd`).
+notes:
+  implementation: |
+    Uses sample JSONL audit logs for local runs; production relies on Elastic connector ingesting Auditbeat indices.
+  references:
+    - https://attack.mitre.org/techniques/T1548/
+    - https://attack.mitre.org/techniques/T1548/001/

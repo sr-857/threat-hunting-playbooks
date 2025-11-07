@@ -1,0 +1,67 @@
+id: saas_credential_stuffing
+name: SaaS Credential Stuffing Campaign
+summary: Detects rapid, distributed login failures followed by success against a SaaS identity provider.
+entity: user
+owner: secops-hunt-team
+confidence: high
+severity: high
+status: production
+version: 1.0.0
+updated_at: 2025-11-07
+log_sources:
+  - product: saas
+    service: identity
+    requirement: Authentication telemetry with client IP, user agent, and outcome fields
+  - product: saas
+    service: mfa
+    requirement: MFA challenge results with device identifier metadata
+linked_rules:
+  sigma:
+    - path: rules/sigma/saas/credential_stuffing.yml
+      use_case: detect distributed password spraying and stuffing attacks
+  yara: []
+enrichment:
+  notebook: notebooks/enrichment/saas_login_anomalies.ipynb
+  parameters:
+    HUNT_USER: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/threat_intel.py
+    - scripts/lib/context/ip_reputation.py
+assumptions:
+  - Identity provider exposes raw audit logs within 5 minutes of the event.
+  - GeoIP context is available for attack surface triage.
+  - SaaS tenant enforces MFA for privileged users.
+data_requirements:
+  - Authentication audit events with outcome, sourceIpAddress, userAgent, deviceId
+  - MFA challenge telemetry with success/failure state
+  - Optional: GeoIP database or enrichment service for location correlation
+defaults:
+  time_range: 1h
+  schedule: "*/15 * * * *"
+  sla_minutes: 15
+  owner_channel: "#soc-identity"
+attack_mapping:
+  tactics:
+    - TA0006: Credential Access
+    - TA0001: Initial Access
+  techniques:
+    - T1110: Brute Force
+    - T1078: Valid Accounts
+tuning_notes:
+  - False positives may occur during load-testing of identity services. Baseline known IP ranges.
+  - Raise alert threshold for successful logins that bypass MFA challenges.
+variants:
+  - name: SaaS Credential Stuffing with Legacy Protocols
+    description: Focuses on legacy authentication endpoints (IMAP/POP/SMTP) with basic auth.
+    detection: Extend Sigma rule to include OAuth grant_type "password" and legacy protocol identifiers.
+review_checklist:
+  - Confirm IP addresses originate from known credential stuffing infrastructure (public lists, TOR).
+  - Correlate with threat intel hits and recent password dumps.
+  - Determine whether compromised accounts performed subsequent risky actions.
+notes:
+  implementation: |
+    Default implementation runs against JSONL SaaS audit logs. Production mode invokes Splunk or Elastic connectors with replay windows per tenant.
+  references:
+    - https://attack.mitre.org/techniques/T1110/
+    - https://attack.mitre.org/techniques/T1078/

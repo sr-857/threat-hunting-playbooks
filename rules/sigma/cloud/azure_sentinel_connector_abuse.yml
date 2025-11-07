@@ -1,0 +1,29 @@
+title: Azure Sentinel Connector Abuse
+id: 6f3f6c83-45d2-4d22-9a6b-3bb3c7f6f2a1
+status: experimental
+description: Detects operations disabling or modifying Microsoft Sentinel data connectors and automation rules.
+author: Threat Hunting Playbooks Team
+logsource:
+  product: azure
+  service: sentinel
+  category: activity
+detection:
+  selection_connector_disable:
+    OperationName: MICROSOFT.SECURITYINSIGHTS/DATACONNECTORS/WRITE
+    Properties.ingestionStatus: Disabled
+  selection_automation_disable:
+    OperationName: MICROSOFT.SECURITYINSIGHTS/AUTOMATIONRULES/WRITE
+    Properties.enabled: false
+  condition: selection_connector_disable or selection_automation_disable
+fields:
+  - TimeGenerated
+  - OperationName
+  - Caller
+  - TenantId
+  - Properties.connectorName
+  - Properties.ingestionStatus
+  - Properties.automationRuleName
+  - Properties.enabled
+falsepositives:
+  - Planned maintenance windows or bulk configuration updates
+level: high

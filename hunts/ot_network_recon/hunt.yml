@@ -1,0 +1,69 @@
+id: ot_network_recon
+name: OT Network Reconnaissance Hunt
+summary: Detects reconnaissance against operational technology networks leveraging unusual protocol scans and ladder logic enumeration.
+entity: asset
+owner: secops-hunt-team
+confidence: medium
+severity: critical
+status: production
+version: 1.0.0
+updated_at: 2025-11-07
+log_sources:
+  - product: network
+    service: ids
+    requirement: OT-aware IDS telemetry (e.g., Zeek ICS, Nozomi) capturing protocol fields
+  - product: ot
+    service: historian
+    requirement: Historian logs indicating project/tag enumeration
+linked_rules:
+  sigma:
+    - path: rules/sigma/ot/network_recon_ladder_logic.yml
+      use_case: detect OT reconnaissance scanning
+  yara: []
+enrichment:
+  notebook: notebooks/enrichment/ot_network_recon.ipynb
+  parameters:
+    OT_ZONE: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/context/ot_assets.py
+    - scripts/lib/context/ip_reputation.py
+assumptions:
+  - Network monitoring captures ICS protocol metadata (S7, Modbus, OPC-UA).
+  - OT asset inventory includes expected talkers and permitted communication paths.
+  - Historian access is monitored for mass tag downloads.
+data_requirements:
+  - IDS telemetry with `protocol`, `query_function`, and `plc_address` fields.
+  - Historian audit logs for read operations on project/tag resources.
+  - Optional: Firewall logs for denied OT network connections.
+defaults:
+  time_range: 1h
+  schedule: "*/30 * * * *"
+  sla_minutes: 30
+  owner_channel: "#soc-ot"
+attack_mapping:
+  tactics:
+    - TA0100: Device Access
+    - TA0102: Network Discovery
+  techniques:
+    - T0840: Module Enumeration
+    - T0843: Program Upload
+    - T0830: Network Sniffing
+tuning_notes:
+  - Suppress alerts during planned maintenance windows (e.g., engineering workstation patching).
+  - Baseline historian bulk reads tied to backups or analytics jobs.
+variants:
+  - name: OT Recon via Modbus Function Codes
+    description: Focuses on Modbus function codes 1-4 scanned across PLC ranges.
+    detection: Adjust Sigma rule to include Modbus-specific fields and thresholds.
+review_checklist:
+  - Validate source IP belongs to corporate IT or external.
+  - Confirm whether engineering team performed legitimate diagnostics.
+  - Inspect subsequent write operations or firmware uploads from the same source.
+notes:
+  implementation: |
+    Uses Zeek ICS sample logs enriched with historian activity. Production deployments integrate with OT monitoring platforms via Splunk or Elastic connectors.
+  references:
+    - https://attack.mitre.org/techniques/T0840/
+    - https://attack.mitre.org/techniques/T0843/
+    - https://attack.mitre.org/techniques/T0830/

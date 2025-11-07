@@ -9,7 +9,9 @@ Ready-to-run hunts with sample data and walkthroughs. Use these to demo the plat
 | [Linux Cron Persistence](./linux-persistence.md) | Linux | Identifies malicious cron jobs executing payloads from `/tmp`. |
 | [Cloud IAM Impossible Travel](./cloud-iam-anomalies.md) | Cloud | Surfaces abnormal sign-ins with the ImpossibleTravel risk. |
 | [SaaS Credential Stuffing Campaign](./saas-credential-stuffing.md) | SaaS | Highlights distributed login failures followed by a suspicious success and MFA bypass. |
+| [SaaS OAuth Token Theft](./saas-oauth-token-theft.md) | SaaS | Detects suspicious refresh token grants lacking MFA and pivot to downstream API abuse. |
 | [Linux SUID Dropper PrivEsc](./linux-suid-dropper.md) | Linux | Detects creation and execution of rogue SUID binaries for privilege escalation. |
 | [Sentinel Connector Abuse](./sentinel-connector-abuse.md) | Azure | Monitors bulk connector changes and automation disablement in Microsoft Sentinel. |
+| [OT Network Reconnaissance](./ot-network-recon.md) | OT | Flags ICS ladder logic enumeration and historian scraping attempts. |
 
 > Need more examples? Contributions welcome—follow the guidance in `CONTRIBUTING.md`.

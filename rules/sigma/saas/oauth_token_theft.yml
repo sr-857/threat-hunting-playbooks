@@ -1,0 +1,27 @@
+title: SaaS OAuth Refresh Token Theft
+id: 5f4f3a0e-55c3-4a78-9afa-6bd4e8175192
+status: experimental
+description: Detects refresh token grants from unusual devices or locations without MFA enforcement.
+author: Threat Hunting Playbooks Team
+logsource:
+  product: saas
+  service: identity
+  category: authentication
+detection:
+  selection_grant:
+    grantType: refresh_token
+    mfaDetail: not_challenged
+  selection_risk:
+    riskDetail: anomalousLocation
+  condition: selection_grant or selection_risk
+fields:
+  - timestamp
+  - userPrincipalName
+  - applicationId
+  - ipAddress
+  - grantType
+  - mfaDetail
+  - deviceDetail
+falsepositives:
+  - Legitimate device re-registration events
+level: high

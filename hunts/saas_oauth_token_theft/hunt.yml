@@ -1,0 +1,69 @@
+id: saas_oauth_token_theft
+name: SaaS OAuth Token Theft Investigation
+summary: Detects suspicious OAuth refresh token grants that bypass MFA and originate from untrusted infrastructure.
+entity: user
+owner: secops-hunt-team
+confidence: medium
+severity: high
+status: production
+version: 1.0.0
+updated_at: 2025-11-07
+log_sources:
+  - product: saas
+    service: identity
+    requirement: OAuth audit logs with IP address, device, and grant_type fields
+  - product: saas
+    service: api_gateway
+    requirement: API telemetry for token usage following the grant event
+linked_rules:
+  sigma:
+    - path: rules/sigma/saas/oauth_token_theft.yml
+      use_case: detect suspicious OAuth token grants
+  yara: []
+enrichment:
+  notebook: notebooks/enrichment/saas_oauth_token_threat.ipynb
+  parameters:
+    HUNT_USER: "{{ entity_id }}"
+    TIME_RANGE: "{{ time_range }}"
+  scripts:
+    - scripts/lib/context/ip_reputation.py
+    - scripts/lib/threat_intel.py
+assumptions:
+  - IdP logs include grant_type and sign-in context attributes.
+  - OAuth applications enforce device registration for privileged scopes.
+  - Threat intel feeds contain active token-grabber infrastructure indicators.
+data_requirements:
+  - OAuth audit events capturing IP address, device details, grant_type, and mfaDetail.
+  - API access logs for the same principal within ±10 minutes of the grant.
+  - Optional: GeoIP enrichment or CASB risk tags.
+defaults:
+  time_range: 30m
+  schedule: "*/10 * * * *"
+  sla_minutes: 20
+  owner_channel: "#soc-identity"
+attack_mapping:
+  tactics:
+    - TA0001: Initial Access
+    - TA0006: Credential Access
+    - TA0003: Persistence
+  techniques:
+    - T1078: Valid Accounts
+    - T1528: Steal Application Access Token
+    - T1550.001: Use Alternate Authentication Material (Token)
+tuning_notes:
+  - Monitor known red-team application IDs to reduce noise.
+  - Allow-list corporate mobile device management (MDM) refresh events.
+variants:
+  - name: OAuth Token Theft with Legacy Grant
+    description: Focuses on grant_type password or client_credentials flows unexpectedly assigned to user accounts.
+    detection: Adjust Sigma rule selection to match legacy protocol usage and bypassed MFA contexts.
+review_checklist:
+  - Validate the application ID and redirect URI used in the grant.
+  - Confirm whether the IP address or device is corporate managed.
+  - Inspect subsequent API calls for sensitive operations (downloads, admin actions).
+notes:
+  implementation: |
+    Runs against SaaS OAuth grant audit logs. In production deployments, connect to Splunk or Elastic indices storing identity telemetry.
+  references:
+    - https://attack.mitre.org/techniques/T1528/
+    - https://learn.microsoft.com/entra/identity/monitoring-health/howto-view-sign-ins

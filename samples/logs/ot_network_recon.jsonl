@@ -1,0 +1,4 @@
+{"timestamp": "2025-08-15T02:10:00Z", "source": "10.10.5.23", "destination": "10.100.1.5", "protocol": "S7comm", "query_function": "ListBlocks", "plc_address": "rack=0,slot=2", "result": "Success"}
+{"timestamp": "2025-08-15T02:10:15Z", "source": "10.10.5.23", "destination": "10.100.1.5", "protocol": "S7comm", "query_function": "ReadSZL", "plc_address": "rack=0,slot=2", "result": "Success"}
+{"timestamp": "2025-08-15T02:10:30Z", "source": "10.10.5.23", "destination": "10.100.1.5", "protocol": "S7comm", "query_function": "Upload", "plc_address": "rack=0,slot=2", "result": "Denied", "error_code": "AccessDenied"}
+{"timestamp": "2025-08-15T02:10:45Z", "source": "10.10.5.23", "destination": "10.100.1.10", "protocol": "historians", "operation": "TagBrowse", "tag_count": 500, "user": "svc_engineering"}

@@ -1,0 +1,30 @@
+title: OT Ladder Logic Enumeration
+id: a11c6f23-48e4-4f17-921d-05391c4f9adb
+status: experimental
+description: Detects S7comm ladder logic enumeration attempts followed by upload operations.
+author: Threat Hunting Playbooks Team
+logsource:
+  product: network
+  service: ids
+  category: ics
+detection:
+  selection_list_blocks:
+    protocol: S7comm
+    query_function: ListBlocks
+  selection_read_szl:
+    protocol: S7comm
+    query_function: ReadSZL
+  selection_upload:
+    protocol: S7comm
+    query_function: Upload
+  condition: selection_list_blocks and selection_read_szl and selection_upload within 5m
+fields:
+  - timestamp
+  - source
+  - destination
+  - protocol
+  - query_function
+  - plc_address
+falsepositives:
+  - Legitimate engineering workstation diagnostics
+level: critical

@@ -4,7 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-reading-blue.svg)](docs/README.md)
 
-Threat Hunting Playbooks is an end-to-end hunting platform that operationalises Sigma and YARA detections, orchestrates scheduled investigations, and guides analysts through enrichment workflows. The stack combines a FastAPI backend, Celery worker, Next.js frontend, and CLI utilities to execute hunts across Splunk, Elastic, and Microsoft Sentinel data sources.
+
+Threat Hunting Playbooks turns curated Sigma and YARA knowledge into repeatable hunt workflows with a single command demo, production-ready connectors, and analyst-friendly guidance. The stack combines a FastAPI backend, Celery worker, Next.js frontend, and CLI utilities to execute hunts across Splunk, Elastic, and Microsoft Sentinel data sources while capturing telemetry and evidence for rapid triage.
 
 ## About
 
@@ -77,8 +78,14 @@ cd threat-hunting-playbooks
 # Install front-end dependencies once to satisfy TypeScript linting
 cd ui && npm install && cd ..
 
-# Bring up the full stack
+# Bring up the full stack or run the turnkey demo
 docker compose up --build
+
+# or, to provision everything and execute a seeded hunt automatically:
+make demo
+
+# stop the environment when you are finished
+make demo-clean
 ```
 
 Services exposed by default:
@@ -99,6 +106,7 @@ Stop the environment with `docker compose down`. Use `docker compose down -v` to
 ## Documentation
 
 - [Getting Started](docs/getting-started.md) – full walkthrough from install to first hunt.
+- [One-command demo](docs/getting-started.md#one-command-demo) – scripted tour powered by `make demo`.
 - [Example Hunts](docs/playbooks/examples.md) – ready-to-run scenarios with screenshot tips.
 - [MITRE ATT&CK Coverage](docs/attack-mapping.md) – tactic/technique mapping for reporting.
 - [Deployment Guides](docs/deployment/cloud.md) – cloud reference architecture.
@@ -152,6 +160,17 @@ npm run build      # production build verification
 ./scripts/validate_sigma.sh   # Lints and converts Sigma content
 ./scripts/validate_yara.sh    # Compiles YARA rules for syntax errors
 ```
+
+### Scenario Tests
+
+Run the end-to-end regression suite covering all seeded playbooks (SaaS credential stuffing & OAuth token theft, Linux SUID dropper, Sentinel connector abuse, OT network recon):
+
+```bash
+cd api
+pytest tests/test_scenarios.py
+```
+
+The suite verifies API execution, telemetry persistence, and artifact generation for each demo playbook.
 
 ## Configuration
 

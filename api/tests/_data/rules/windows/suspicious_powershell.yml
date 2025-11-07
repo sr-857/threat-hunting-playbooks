@@ -1,0 +1,8 @@
+title: Suspicious PowerShell
+description: Test rule
+logsource:
+  product: windows
+detection:
+  selection:
+    EventID: 4104
+condition: selection

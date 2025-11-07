@@ -1,0 +1,13 @@
+title: OT Network Recon Demo
+id: 55555555-aaaa-bbbb-cccc-ffffffffffff
+description: Minimal rule for OT network reconnaissance scenario testing.
+status: experimental
+logsource:
+  product: ics
+detection:
+  selection:
+    protocol: s7comm
+  condition: selection
+falsepositives:
+  - Legitimate engineering workstation testing
+level: high

@@ -101,6 +101,30 @@ THREAT_API_URL=http://localhost:8000 THREAT_API_TOKEN="<token>" \
 
 Review results in the UI under **Playbooks → Quick Run history** or via the telemetry endpoints powering the Observability dashboard.
 
+## One-command Demo
+
+Prefer a scripted tour you can run during onboarding sessions or executive demos? The repo ships with a `make demo` target that:
+
+1. Builds and launches the full Docker Compose stack.
+2. Polls the API until it is healthy.
+3. Authenticates with the seeded administrator credentials.
+4. Executes the **SaaS Credential Stuffing Campaign** playbook end-to-end.
+5. Captures run output plus recent telemetry into `.demo-output/` for easy sharing.
+
+```bash
+make demo
+# tear everything down afterwards
+make demo-clean
+```
+
+When the script finishes it prints:
+
+- Matched versus total records, confidence score, and execution notes.
+- Paths to JSON artifacts (`*_run.json`, `telemetry_events.json`, `telemetry_alerts.json`).
+- A fresh bearer token you can paste into the UI or CLI.
+
+> **Screenshot checklist:** Capture the CLI summary, the Observability dashboard tile for the run, and the playbook detail view showing matched records. Save images under `docs/assets/` and reference them from documentation using relative paths (see [Example Hunts](./playbooks/examples.md#capturing-screenshots-for-documentation)).
+
 ## Next Steps
 
 - Explore the [playbook walkthroughs](./playbooks/windows-lateral-movement.md) to understand metadata, enrichment, and analyst flow.

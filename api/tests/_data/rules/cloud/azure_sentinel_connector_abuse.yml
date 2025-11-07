@@ -1,0 +1,13 @@
+title: Sentinel Connector Abuse Demo
+id: 66666666-aaaa-bbbb-cccc-ffffffffffff
+description: Minimal rule for Sentinel connector abuse scenario testing.
+status: experimental
+logsource:
+  product: azure
+detection:
+  selection:
+    operationName: DisableAutomationRule
+  condition: selection
+falsepositives:
+  - Planned maintenance window
+level: high

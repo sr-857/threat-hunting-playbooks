@@ -1,0 +1,14 @@
+title: SaaS OAuth Token Theft Demo
+id: 88888888-aaaa-bbbb-cccc-ffffffffffff
+description: Minimal rule for SaaS OAuth token theft scenario testing.
+status: experimental
+logsource:
+  category: authentication
+detection:
+  selection:
+    grant_type: refresh_token
+    mfa_bypass: true
+  condition: selection
+falsepositives:
+  - Legitimate administrator token refresh
+level: high

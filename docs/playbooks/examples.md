@@ -198,13 +198,16 @@ Consistent visuals help contributors understand workflows. Place images in `docs
 | Screenshot | Suggested Filename | Capture Notes |
 | --- | --- | --- |
 | Playbook run confirmation modal | `playbook-run-modal.png` | Trigger a quick run from the UI and capture the success state. |
-| Observability dashboard alert tile | `observability-dashboard.png` | After a hunt runs, capture the Alerts section showing the new entry. |
-| Telemetry JSON in Swagger | `telemetry-api-response.png` | Use Swagger at `/docs` to show the `/telemetry/events` response. |
+| Observability dashboard alert tile | `observability-alert-tile.png` | After a hunt runs, capture the Alerts section showing the new entry. |
+| Telemetry JSON in Swagger | `telemetry-events.png` | Use Swagger at `/docs` to show the `/telemetry/events` response. |
+| CLI demo summary | `demo-cli-summary.png` | Run `make demo` and screenshot the final terminal summary block. |
 
 Embed screenshots in Markdown:
 ```markdown
 ![Observability dashboard](../assets/observability-dashboard.png)
 ```
+
+> Refer to `docs/assets/README.md` for the full catalogue of recommended filenames and hygiene tips when adding new images.
 
 > Store source images (if any) in a shared folder or design tool so they can be updated without pixelation. Keep sensitive data masked or use synthetic samples.
 

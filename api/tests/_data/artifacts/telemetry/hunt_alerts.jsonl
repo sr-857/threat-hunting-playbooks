@@ -1,0 +1,5 @@
+{"type": "hunt_alert", "timestamp": "2025-11-07T15:33:02.113725+00:00", "playbook_id": "592a5dac-1397-4ddf-99f5-6f41126459a7", "trigger": "manual", "schedule_id": null, "confidence": 1.0, "threshold": 0.7}
+{"type": "hunt_alert", "timestamp": "2025-11-07T15:33:02.128788+00:00", "playbook_id": "cd2e41e9-8df0-43e8-bede-5d0a7513318d", "trigger": "manual", "schedule_id": null, "confidence": 1.0, "threshold": 0.7}
+{"type": "hunt_alert", "timestamp": "2025-11-07T15:33:02.140195+00:00", "playbook_id": "97398e00-8d27-4c1d-86ba-4ea9fb7b1787", "trigger": "manual", "schedule_id": null, "confidence": 1.0, "threshold": 0.7}
+{"type": "hunt_alert", "timestamp": "2025-11-07T15:33:02.150883+00:00", "playbook_id": "42392921-bffc-49e5-926f-2eb9862850a2", "trigger": "manual", "schedule_id": null, "confidence": 1.0, "threshold": 0.7}
+{"type": "hunt_alert", "timestamp": "2025-11-07T15:33:02.162004+00:00", "playbook_id": "326d646f-ac7f-4289-bacb-50071c9eef2d", "trigger": "manual", "schedule_id": null, "confidence": 1.0, "threshold": 0.7}

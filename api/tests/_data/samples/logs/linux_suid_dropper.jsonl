@@ -1,0 +1,1 @@
+{"host": "demo-linux", "action": "chmod", "path": "/tmp/.cache/suid-helper", "user": "attacker"}

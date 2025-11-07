@@ -1,0 +1,13 @@
+title: Linux SUID Dropper Demo
+id: 77777777-aaaa-bbbb-cccc-ffffffffffff
+description: Minimal rule for Linux privilege escalation scenario testing.
+status: experimental
+logsource:
+  product: linux
+detection:
+  selection:
+    action: chmod
+  condition: selection
+falsepositives:
+  - Legitimate configuration management
+level: high

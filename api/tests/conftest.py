@@ -15,7 +15,8 @@ TEST_DB_PATH = Path(__file__).with_name("test.db")
 if TEST_DB_PATH.exists():
     TEST_DB_PATH.unlink()
 
-os.environ.setdefault("DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}")
+PREVIOUS_DATABASE_URL = os.environ.get("DATABASE_URL")
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 os.environ.setdefault("INITIAL_ADMIN_EMAIL", "admin@example.com")
 os.environ.setdefault("INITIAL_ADMIN_PASSWORD", "ChangeMe123!")
 os.environ.setdefault("ENABLE_METRICS", "false")
@@ -87,3 +88,8 @@ def cleanup_database() -> Generator[None, None, None]:
     journal = TEST_DB_PATH.with_suffix(TEST_DB_PATH.suffix + "-journal")
     if journal.exists():
         journal.unlink()
+
+    if PREVIOUS_DATABASE_URL is not None:
+        os.environ["DATABASE_URL"] = PREVIOUS_DATABASE_URL
+    else:
+        os.environ.pop("DATABASE_URL", None)

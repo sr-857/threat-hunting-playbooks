@@ -52,6 +52,11 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+from app.core import config as app_config  # noqa: E402
+
+app_config.get_settings.cache_clear()
+test_settings = app_config.get_settings()
+
 from app.db import session as db_session  # noqa: E402
 
 sqlite_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
@@ -61,6 +66,7 @@ except AttributeError:
     pass
 db_session.engine = sqlite_engine
 db_session.AsyncSessionLocal = async_sessionmaker(sqlite_engine, expire_on_commit=False, class_=AsyncSession)
+db_session.settings = test_settings
 
 from app.services import bootstrap as bootstrap_services  # noqa: E402
 from app.api import deps as api_deps  # noqa: E402
@@ -75,6 +81,10 @@ bootstrap_services.AsyncSessionLocal = db_session.AsyncSessionLocal
 api_deps.AsyncSessionLocal = db_session.AsyncSessionLocal
 if scheduler_tasks is not None:
     scheduler_tasks.AsyncSessionLocal = db_session.AsyncSessionLocal
+
+import app.main as app_main  # noqa: E402
+
+app_main.settings = test_settings
 
 from app.main import app  # noqa: E402  (import after environment configuration)
 

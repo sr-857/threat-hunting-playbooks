@@ -104,6 +104,7 @@ Review results in the UI under **Playbooks → Quick Run history** or via the te
 ## Next Steps
 
 - Explore the [playbook walkthroughs](./playbooks/windows-lateral-movement.md) to understand metadata, enrichment, and analyst flow.
+- Browse ready-to-run [example hunts](./playbooks/examples.md) for demo scripts and screenshot guidance.
 - Map coverage to your threat landscape using the [ATT&CK coverage matrix](./attack-mapping.md).
 - Plan a deployment on cloud infrastructure with the [cloud reference guide](./deployment/cloud.md).
 

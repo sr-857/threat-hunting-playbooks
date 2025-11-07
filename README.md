@@ -1,5 +1,9 @@
 # Threat Hunting Playbooks
 
+[![CI](https://github.com/sr-857/threat-hunting-playbooks/actions/workflows/ci.yml/badge.svg)](https://github.com/sr-857/threat-hunting-playbooks/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-reading-blue.svg)](docs/README.md)
+
 Threat Hunting Playbooks is an end-to-end hunting platform that operationalises Sigma and YARA detections, orchestrates scheduled investigations, and guides analysts through enrichment workflows. The stack combines a FastAPI backend, Celery worker, Next.js frontend, and CLI utilities to execute hunts across Splunk, Elastic, and Microsoft Sentinel data sources.
 
 ## Key Capabilities
@@ -82,6 +86,13 @@ Services exposed by default:
 | Grafana | `http://localhost:3001` (admin/admin) | Dashboards visualising hunt telemetry |
 
 Stop the environment with `docker compose down`. Use `docker compose down -v` to remove persistent volumes if you want a clean slate.
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md) – full walkthrough from install to first hunt.
+- [Example Hunts](docs/playbooks/examples.md) – ready-to-run scenarios with screenshot tips.
+- [MITRE ATT&CK Coverage](docs/attack-mapping.md) – tactic/technique mapping for reporting.
+- [Deployment Guides](docs/deployment/cloud.md) – cloud reference architecture.
 
 ## CLI Usage
 
@@ -167,12 +178,19 @@ Adjust these values (for example via `.env` files) before deploying to shared en
 - **Alert thresholds** – Configure `ALERT_CONFIDENCE_THRESHOLD` to drive automated notifications.
 - **Webhook integrations** – Supply `ALERT_SLACK_WEBHOOK_URL`, `ALERT_TEAMS_WEBHOOK_URL`, `ALERT_PAGERDUTY_ROUTING_KEY`, or SMTP variables (`ALERT_EMAIL_*`) for downstream alert delivery.
 
-## Contributing
+## Contributing & Community
 
-1. Fork the repository and create a feature branch.
-2. Run validation scripts for Sigma/YARA content before submitting pull requests.
-3. Ensure new connectors or playbooks include documentation and ATT&CK mappings in `docs/` and `hunts/`.
-4. Open a pull request describing the change, testing performed, and any follow-on tasks.
+We welcome contributions from operators, detection engineers, and researchers. To get involved:
+
+1. **Start a conversation.** Open a GitHub Discussion (after enabling it in the repo settings) or file an issue describing the problem or idea.
+2. **Fork and branch.** Create a feature branch from `main` for your work.
+3. **Keep quality high.**
+   - Run `pytest` from `api/` and `npm run lint` from `ui/`.
+   - Execute the Sigma/YARA validation scripts (`./scripts/validate_*`).
+4. **Document the change.** Update relevant guides in `docs/`, add screenshots when UI changes, and extend ATT&CK mappings where appropriate.
+5. **Submit a PR.** Include a clear summary, testing evidence, and follow-on tasks.
+
+> Looking to help but not sure where to start? Check the `good first issue` and `help wanted` labels or join the Discussions board to coordinate efforts.
 
 ## License
 

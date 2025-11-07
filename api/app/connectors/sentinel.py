@@ -74,8 +74,7 @@ class SentinelConnector(BaseConnector):
         if self._client is None or LogsQueryStatus is None:
             raise RuntimeError("Sentinel connector is not configured or dependency missing")
 
-        query = artifacts.translated_query or "*
-| take 200"
+        query = artifacts.translated_query or "*\n| take 200"
         timespan = None
         if earliest or latest:
             timespan = (earliest or datetime.utcnow(), latest or datetime.utcnow())

@@ -1,0 +1,3 @@
+{"timestamp": "2025-05-01T10:00:00Z", "message": "CRON[1234]: (root) CMD=(/usr/bin/base64 -d /tmp/.c | /bin/bash)"}
+{"timestamp": "2025-05-01T10:01:00Z", "message": "CRON[1235]: (root) CMD=(/tmp/x)"}
+{"timestamp": "2025-05-01T10:02:00Z", "message": "CRON[1236]: (root) CMD=(/tmp/x)"}

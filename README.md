@@ -102,6 +102,7 @@ Stop the environment with `docker compose down`. Use `docker compose down -v` to
 - [Example Hunts](docs/playbooks/examples.md) – ready-to-run scenarios with screenshot tips.
 - [MITRE ATT&CK Coverage](docs/attack-mapping.md) – tactic/technique mapping for reporting.
 - [Deployment Guides](docs/deployment/cloud.md) – cloud reference architecture.
+- [First Hunt Tutorial](docs/tutorials/first-hunt.md) – quick start guide for a first execution.
 
 ## CLI Usage
 
@@ -198,6 +199,8 @@ We welcome contributions from operators, detection engineers, and researchers. T
    - Execute the Sigma/YARA validation scripts (`./scripts/validate_*`).
 4. **Document the change.** Update relevant guides in `docs/`, add screenshots when UI changes, and extend ATT&CK mappings where appropriate.
 5. **Submit a PR.** Include a clear summary, testing evidence, and follow-on tasks.
+
+See the full [CONTRIBUTING](CONTRIBUTING.md) guide for detailed workflows, coding standards, and communication norms. New to the project? Check the issue tracker for tasks labelled `good first issue` or `help wanted` to get started quickly.
 
 > Looking to help but not sure where to start? Check the `good first issue` and `help wanted` labels or join the Discussions board to coordinate efforts.
 

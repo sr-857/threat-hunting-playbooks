@@ -47,6 +47,7 @@ if not SAMPLE_FILE.exists():
 os.environ.setdefault("SAMPLES_ROOT", str(SAMPLES_ROOT))
 os.environ.setdefault("RULES_ROOT", str(RULES_ROOT))
 os.environ.setdefault("ARTIFACTS_ROOT", str(ARTIFACTS_ROOT))
+os.environ.setdefault("REDIS_URL", "memory://")
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:

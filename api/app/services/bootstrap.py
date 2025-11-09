@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.schema_guard import ensure_schema_guard
 from app.db.session import AsyncSessionLocal, engine
 from app.models.playbook import Playbook
 from app.services.user_store import ensure_initial_superuser
@@ -65,6 +66,8 @@ _default_playbooks = [
 async def init_db(seed: bool = True) -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    await ensure_schema_guard(engine)
 
     if not seed:
         return

@@ -9,18 +9,32 @@ from pathlib import Path
 from typing import Iterable
 from uuid import UUID
 
+import structlog
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import get_settings
 from app.models.playbook import Playbook
 from app.schemas.playbook import PlaybookRead, PlaybookRunMatch, PlaybookRunResult
-from app.utils.sigma import iter_jsonl_records, load_sigma_rules, record_matches_selection
+from app.utils.sigma import (
+    SigmaValidationError,
+    iter_jsonl_records,
+    load_sigma_rules,
+    record_matches_selection,
+    validate_sigma_rules,
+)
+
+from app.services.object_store import (
+    ObjectStoreError,
+    ObjectStoreDisabledError,
+    get_object_store,
+)
 
 _CACHE_TTL_SECONDS = 30.0
 _playbook_cache: dict[str, object] = {"timestamp": 0.0, "data": None}
 
 settings = get_settings()
+logger = structlog.get_logger(__name__)
 
 
 class PlaybookNotFoundError(Exception):
@@ -74,7 +88,11 @@ def execute_playbook_local(playbook: PlaybookRead) -> PlaybookRunResult:
     if not data_full_path.exists():
         raise FileNotFoundError(f"Data file not found: {data_full_path}")
 
-    rules = load_sigma_rules(rule_full_path)
+    try:
+        rules = load_sigma_rules(rule_full_path)
+        validate_sigma_rules(rules)
+    except (ValueError, SigmaValidationError) as exc:
+        raise ValueError(f"Invalid Sigma rule file {rule_full_path}: {exc}") from exc
     records = list(iter_jsonl_records(data_full_path)) if playbook.data_format.lower() == "jsonl" else []
     if playbook.data_format.lower() != "jsonl":
         raise ValueError(f"Unsupported data format: {playbook.data_format}")
@@ -119,6 +137,9 @@ def execute_playbook_local(playbook: PlaybookRead) -> PlaybookRunResult:
     }
     artifact_file.write_text(json.dumps(artifact_payload, default=str), encoding="utf-8")
 
+    artifact_paths: dict[str, str] = {"result": str(artifact_file)}
+    _maybe_upload_artifact(artifact_file, playbook, timestamp, artifact_paths)
+
     return PlaybookRunResult(
         playbook_id=playbook.id,
         matches=matches,
@@ -127,5 +148,48 @@ def execute_playbook_local(playbook: PlaybookRead) -> PlaybookRunResult:
         execution_notes="Local execution against JSONL sample data",
         summary=summary,
         confidence=confidence,
-        artifact_paths={"result": str(artifact_file)},
+        artifact_paths=artifact_paths,
     )
+
+
+def _maybe_upload_artifact(
+    artifact_file: Path,
+    playbook: PlaybookRead,
+    timestamp: str,
+    artifact_paths: dict[str, str],
+) -> None:
+    try:
+        store = get_object_store()
+    except Exception as exc:  # pragma: no cover - defensive guard
+        logger.warning(
+            "playbook_store.object_store_unavailable", error=str(exc)
+        )
+        return
+
+    if not store.enabled:
+        return
+
+    metadata = {
+        "playbook_id": str(playbook.id),
+        "generated_at": timestamp,
+        "artifact_type": "playbook-result",
+    }
+
+    try:
+        object_key = store.put_file(
+            artifact_file,
+            namespace=f"playbooks/{playbook.id}",
+            object_name=artifact_file.name,
+            metadata=metadata,
+        )
+        artifact_paths["result_object_key"] = object_key
+        artifact_paths["result_presigned_url"] = store.presign(object_key)
+    except ObjectStoreDisabledError:
+        # Disabled after initialization; nothing to do.
+        logger.debug("playbook_store.object_store_disabled")
+    except ObjectStoreError as exc:  # pragma: no cover - external dependency
+        logger.warning(
+            "playbook_store.object_store_upload_failed",
+            error=str(exc),
+            playbook_id=str(playbook.id),
+        )

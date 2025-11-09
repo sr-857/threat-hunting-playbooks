@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.connectors.base import QueryArtifacts, build_filter_from_selection
+from app.utils.sigma import SigmaValidationError, validate_sigma_rules
 
 
 @dataclass(slots=True)
@@ -23,6 +24,8 @@ def translate_basic_selection(rule: dict[str, Any], backend_name: str) -> QueryA
     are implemented. It inspects the first selection block and renders a generic
     predicate expression that downstream connectors can adapt as needed.
     """
+
+    validate_sigma_rules([rule])
 
     detection = rule.get("detection", {})
     selection = detection.get("selection", {})

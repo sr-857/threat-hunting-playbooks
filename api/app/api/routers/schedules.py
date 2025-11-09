@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_session_dependency
 from app.schemas.schedule import HuntScheduleCreate, HuntScheduleRead, HuntScheduleUpdate
-from app.scheduler.tasks import run_playbook_task
+from app.scheduler.tasks import enqueue_run_playbook
 from app.services.playbook_store import PlaybookNotFoundError, get_playbook
 from app.services.schedule_store import (
     HuntScheduleNotFoundError,
@@ -89,7 +89,7 @@ async def run_schedule_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
     background_tasks.add_task(
-        run_playbook_task.delay,
+        enqueue_run_playbook,
         str(schedule.playbook_id),
         str(schedule.id),
     )

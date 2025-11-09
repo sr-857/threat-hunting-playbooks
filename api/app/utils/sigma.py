@@ -56,3 +56,43 @@ def record_matches_selection(record: dict[str, Any], selection: dict[str, Any]) 
         if not match_value(record[base_field], expected, modifier):
             return False
     return True
+
+
+class SigmaValidationError(ValueError):
+    """Raised when a Sigma rule fails validation."""
+
+
+def validate_sigma_rules(rules: list[dict[str, Any]]) -> None:
+    """Ensure incoming Sigma rules contain required metadata and detection clauses."""
+
+    if not rules:
+        raise SigmaValidationError("No Sigma rules were provided")
+
+    for index, rule in enumerate(rules):
+        context = rule.get("title") or f"rule[{index}]"
+
+        if not isinstance(rule, dict):
+            raise SigmaValidationError(f"{context}: rule must be a mapping")
+
+        title = rule.get("title")
+        if not isinstance(title, str) or not title.strip():
+            raise SigmaValidationError(f"{context}: missing or empty 'title'")
+
+        logsource = rule.get("logsource")
+        if not isinstance(logsource, dict) or not logsource:
+            raise SigmaValidationError(f"{context}: missing 'logsource' definition")
+
+        detection = rule.get("detection")
+        if not isinstance(detection, dict):
+            raise SigmaValidationError(f"{context}: missing 'detection' section")
+
+        selection = detection.get("selection")
+        if not isinstance(selection, dict) or not selection:
+            raise SigmaValidationError(f"{context}: detection.selection must be a non-empty mapping")
+
+        for field, value in selection.items():
+            if value in (None, ""):
+                raise SigmaValidationError(
+                    f"{context}: detection selection '{field}' cannot be empty"
+                )
+

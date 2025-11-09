@@ -3,6 +3,7 @@ from time import time
 
 import structlog
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.routers.auth import router as auth_router
@@ -25,6 +26,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+)
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(playbooks_router, prefix=settings.api_prefix)
 app.include_router(schedules_router, prefix=settings.api_prefix)
@@ -53,6 +62,17 @@ if settings.enable_metrics:
         tags=["metrics"],
         endpoint=settings.metrics_endpoint,
     )
+
+
+@app.get("/healthz", tags=["health"])
+async def healthz() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/readyz", tags=["health"])
+async def readyz() -> dict[str, str]:
+    # Placeholder: future work should check DB, Redis, MinIO connections.
+    return {"status": "ready"}
 
 
 @app.get("/health", tags=["health"])

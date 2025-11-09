@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     minio_endpoint: str = "http://minio:9000"
     minio_access_key: str = "minioadmin"
     minio_secret_key: str = "minioadmin"
+    minio_secure: bool = Field(default=False, validation_alias=AliasChoices("MINIO_SECURE"))
+    minio_bucket: str = Field(default="threat-playbooks", validation_alias=AliasChoices("MINIO_BUCKET"))
+    minio_region: str | None = Field(default=None, validation_alias=AliasChoices("MINIO_REGION"))
+    minio_artifact_prefix: str = Field(default="artifacts", validation_alias=AliasChoices("MINIO_ARTIFACT_PREFIX"))
+    minio_enabled: bool = Field(default=False, validation_alias=AliasChoices("MINIO_ENABLED"))
+    minio_presign_ttl_seconds: int = Field(default=3600, validation_alias=AliasChoices("MINIO_PRESIGN_TTL_SECONDS"))
     samples_root: Path = Field(default=Path("/samples"), validation_alias=AliasChoices("SAMPLES_ROOT", "PLAYBOOK_SAMPLE_PATH"))
     rules_root: Path = Field(default=Path("/rules"), validation_alias=AliasChoices("RULES_ROOT", "PLAYBOOK_RULES_ROOT"))
     artifacts_root: Path = Field(default=Path("/logs"), validation_alias=AliasChoices("ARTIFACTS_ROOT", "PLAYBOOK_ARTIFACT_ROOT"))
@@ -27,9 +33,60 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://redis:6379/0", validation_alias=AliasChoices("REDIS_URL", "CELERY_BROKER_URL"))
     celery_result_backend: str | None = Field(default=None, validation_alias=AliasChoices("CELERY_RESULT_BACKEND"))
     secret_key: str = Field(default="change-me", validation_alias=AliasChoices("SECRET_KEY", "JWT_SECRET_KEY"))
-    access_token_expire_minutes: int = Field(
-        default=60,
-        validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "JWT_EXPIRE_MINUTES"),
+    access_token_ttl_minutes: int = Field(
+        default=10,
+        validation_alias=AliasChoices(
+            "ACCESS_TOKEN_TTL_MINUTES",
+            "ACCESS_TOKEN_EXPIRE_MINUTES",
+            "JWT_EXPIRE_MINUTES",
+        ),
+    )
+    refresh_token_ttl_minutes: int = Field(
+        default=7 * 24 * 60,
+        validation_alias=AliasChoices("REFRESH_TOKEN_TTL_MINUTES"),
+    )
+    jwt_algorithm: str = Field(default="HS256", validation_alias=AliasChoices("JWT_ALGORITHM"))
+    jwt_issuer: str | None = Field(default=None, validation_alias=AliasChoices("JWT_ISSUER"))
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000"],
+        validation_alias=AliasChoices("CORS_ALLOWED_ORIGINS"),
+    )
+    cors_allow_credentials: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("CORS_ALLOW_CREDENTIALS"),
+    )
+    auth_cookie_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("AUTH_COOKIE_ENABLED"),
+    )
+    auth_cookie_name: str = Field(default="thp_session", validation_alias=AliasChoices("AUTH_COOKIE_NAME"))
+    auth_cookie_secure: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("AUTH_COOKIE_SECURE"),
+    )
+    auth_cookie_samesite: str = Field(
+        default="strict",
+        validation_alias=AliasChoices("AUTH_COOKIE_SAMESITE"),
+    )
+    redis_refresh_prefix: str = Field(
+        default="auth:refresh:",
+        validation_alias=AliasChoices("REDIS_REFRESH_PREFIX"),
+    )
+    task_lock_prefix: str = Field(
+        default="task-lock:",
+        validation_alias=AliasChoices("TASK_LOCK_PREFIX"),
+    )
+    task_lock_ttl_seconds: int = Field(
+        default=600,
+        validation_alias=AliasChoices("TASK_LOCK_TTL_SECONDS"),
+    )
+    task_retry_backoff_seconds: int = Field(
+        default=30,
+        validation_alias=AliasChoices("TASK_RETRY_BACKOFF_SECONDS"),
+    )
+    task_retry_backoff_max_seconds: int = Field(
+        default=600,
+        validation_alias=AliasChoices("TASK_RETRY_BACKOFF_MAX_SECONDS"),
     )
     initial_admin_email: str = Field(
         default="admin@example.com",
@@ -99,6 +156,19 @@ class Settings(BaseSettings):
     sentinel_client_secret: str | None = Field(default=None, validation_alias=AliasChoices("SENTINEL_CLIENT_SECRET"))
 
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: Any) -> list[str]:
+        if value is None or value == "":
+            return []
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @property
+    def access_token_expire_minutes(self) -> int:  # backwards compatibility for legacy code
+        return self.access_token_ttl_minutes
 
 
 @lru_cache()

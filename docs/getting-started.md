@@ -44,9 +44,11 @@ POSTGRES_PASSWORD=your-strong-password
 SECRET_KEY=long-random-string
 INITIAL_ADMIN_EMAIL=admin@example.com
 INITIAL_ADMIN_PASSWORD=ChangeMeNow!
+MINIO_ENABLED=true
+MINIO_PRESIGN_TTL_SECONDS=900
 ```
 
-The API reads these values via `app/core/config.py`. For production, use a secrets manager or orchestrator-level secret injection.
+`MINIO_ENABLED` toggles artifact uploads to the MinIO bucket, while `MINIO_PRESIGN_TTL_SECONDS` controls how long generated download links remain valid. The API reads these values via `app/core/config.py`. For production, use a secrets manager or orchestrator-level secret injection.
 
 ## Launch the Stack with Docker Compose
 
@@ -99,7 +101,7 @@ THREAT_API_URL=http://localhost:8000 THREAT_API_TOKEN="<token>" \
   threat-cli run <playbook-id>
 ```
 
-Review results in the UI under **Playbooks → Quick Run history** or via the telemetry endpoints powering the Observability dashboard.
+Sigma rules are validated before execution—invalid or incomplete definitions will be rejected with actionable error messages. Review results in the UI under **Playbooks → Quick Run history** or via the telemetry endpoints powering the Observability dashboard.
 
 ## One-command Demo
 

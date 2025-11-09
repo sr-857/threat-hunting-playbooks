@@ -12,7 +12,12 @@ from uuid import uuid4
 
 import structlog
 from minio import Minio
-from minio.commonconfig import ENABLED, VersioningConfig
+
+try:  # pragma: no cover - depends on installed minio version
+    from minio.commonconfig import ENABLED, VersioningConfig
+except ImportError:  # pragma: no cover - fallback for older SDKs
+    ENABLED = "Enabled"  # type: ignore[assignment]
+    VersioningConfig = None  # type: ignore[assignment]
 from minio.error import S3Error
 
 from app.core.config import get_settings
@@ -81,10 +86,38 @@ class ObjectStore:
                     raise
 
             # Enable versioning for better recovery from accidental overwrites.
-            self._client.set_bucket_versioning(self._bucket, VersioningConfig(ENABLED))
+            self._maybe_enable_versioning()
         except S3Error as exc:  # pragma: no cover - depends on external service
             logger.error("object_store.bootstrap_failed", bucket=self._bucket, error=str(exc))
             raise ObjectStoreError("Failed to initialize MinIO bucket") from exc
+
+    def _maybe_enable_versioning(self) -> None:
+        assert self._client is not None  # nosec - guarded by caller
+
+        if not hasattr(self._client, "set_bucket_versioning"):
+            logger.warning(
+                "object_store.versioning_unsupported",
+                bucket=self._bucket,
+                reason="set_bucket_versioning missing",
+            )
+            return
+
+        try:
+            if VersioningConfig is None:
+                logger.warning(
+                    "object_store.versioning_unsupported",
+                    bucket=self._bucket,
+                    reason="VersioningConfig unavailable",
+                )
+                return
+
+            self._client.set_bucket_versioning(self._bucket, VersioningConfig(ENABLED))
+        except TypeError as exc:  # pragma: no cover - legacy fallback
+            logger.warning(
+                "object_store.versioning_unsupported",
+                bucket=self._bucket,
+                reason=str(exc),
+            )
 
     def put_file(
         self,

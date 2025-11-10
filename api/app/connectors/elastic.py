@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.connectors.base import BaseConnector, ExecutionRecord, ExecutionResult, QueryArtifacts
@@ -67,7 +67,7 @@ class ElasticConnector(BaseConnector):
         if self._client is None:
             raise RuntimeError("Elasticsearch connector is not configured or dependency missing")
 
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
 
         query_string = artifacts.translated_query or "*"
         must_clauses: list[dict[str, Any]] = [{"query_string": {"query": query_string}}]
@@ -99,7 +99,7 @@ class ElasticConnector(BaseConnector):
             timestamp = (
                 datetime.fromisoformat(timestamp_value.replace("Z", "+00:00"))
                 if isinstance(timestamp_value, str)
-                else datetime.utcnow()
+                else datetime.now(timezone.utc)
             )
             records.append(
                 ExecutionRecord(
@@ -110,5 +110,5 @@ class ElasticConnector(BaseConnector):
                 )
             )
 
-        end = datetime.utcnow()
+        end = datetime.now(timezone.utc)
         return ExecutionResult(records=records, query=artifacts, started_at=start, finished_at=end)

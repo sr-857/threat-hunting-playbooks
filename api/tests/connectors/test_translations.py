@@ -15,6 +15,9 @@ from app.connectors.splunk import SplunkConnector
 def sigma_rule() -> dict[str, Any]:
     return {
         "title": "Sample Rule",
+        "logsource": {
+            "category": "authentication",
+        },
         "detection": {
             "selection": {
                 "EventID": 4625,

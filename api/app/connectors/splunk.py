@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -83,7 +83,7 @@ class SplunkConnector(BaseConnector):
         if latest:
             payload["latest_time"] = latest.isoformat()
 
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
         response = self._client.post("/services/search/jobs/export", data=payload)
         response.raise_for_status()
 
@@ -102,7 +102,7 @@ class SplunkConnector(BaseConnector):
             timestamp = (
                 datetime.fromisoformat(timestamp_value.replace("Z", "+00:00"))
                 if isinstance(timestamp_value, str)
-                else datetime.utcnow()
+                else datetime.now(timezone.utc)
             )
             records.append(
                 ExecutionRecord(
@@ -113,5 +113,5 @@ class SplunkConnector(BaseConnector):
                 )
             )
 
-        end = datetime.utcnow()
+        end = datetime.now(timezone.utc)
         return ExecutionResult(records=records, query=artifacts, started_at=start, finished_at=end)

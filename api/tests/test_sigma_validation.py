@@ -37,7 +37,7 @@ logsource:
         name="Invalid Rule Playbook",
         description=None,
         rule_path=str(rule_path.relative_to(RULES_ROOT)),
-        data_path=str(sample_path.relative_to(SAMPLES_ROOT.parent)),
+        data_path=str(sample_path.relative_to(SAMPLES_ROOT)),
         data_format="jsonl",
         tags=[],
         enabled=True,

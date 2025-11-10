@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.connectors.base import BaseConnector, ExecutionRecord, ExecutionResult, QueryArtifacts
@@ -77,9 +77,9 @@ class SentinelConnector(BaseConnector):
         query = artifacts.translated_query or "*\n| take 200"
         timespan = None
         if earliest or latest:
-            timespan = (earliest or datetime.utcnow(), latest or datetime.utcnow())
+            timespan = (earliest or datetime.now(timezone.utc), latest or datetime.now(timezone.utc))
 
-        start = datetime.utcnow()
+        start = datetime.now(timezone.utc)
         response = self._client.query_workspace(
             workspace_id=self.settings.sentinel_workspace_id,
             query=query,
@@ -96,7 +96,7 @@ class SentinelConnector(BaseConnector):
                     timestamp = (
                         datetime.fromisoformat(timestamp_value.replace("Z", "+00:00"))
                         if isinstance(timestamp_value, str)
-                        else datetime.utcnow()
+                        else datetime.now(timezone.utc)
                     )
                     records.append(
                         ExecutionRecord(
@@ -110,5 +110,5 @@ class SentinelConnector(BaseConnector):
             message = getattr(response, "error", None)
             raise RuntimeError(f"Sentinel query failed: {message}")
 
-        end = datetime.utcnow()
+        end = datetime.now(timezone.utc)
         return ExecutionResult(records=records, query=artifacts, started_at=start, finished_at=end)

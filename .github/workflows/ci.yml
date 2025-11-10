@@ -47,6 +47,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -e .[dev]
+          pip install --upgrade "minio>=7.2.7"
 
       - name: Run API test suite
         working-directory: api
